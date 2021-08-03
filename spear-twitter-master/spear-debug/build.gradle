@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('../../spear-common/spear/build/outputs/aar/spear-debug.aar'))

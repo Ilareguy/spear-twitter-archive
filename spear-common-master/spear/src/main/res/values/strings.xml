@@ -1,0 +1,8 @@
+<resources>
+    <!-- Error descriptions -->
+    <string name="ERROR_UNKNOWN">An unknown error occurred.</string>
+    <string name="INTERNET_UNAVAILABLE_REVERT_TO_CACHE">
+        Couldn\'t establish a remote connection to Twitter.
+        Showing offline contents.
+    </string>
+</resources>

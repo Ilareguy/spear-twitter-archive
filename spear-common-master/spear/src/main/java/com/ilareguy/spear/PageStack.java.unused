@@ -1,0 +1,118 @@
+package com.ilareguy.spear;
+
+import android.os.Bundle;
+
+import com.ilareguy.spear.util.RestorableState;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+public class PageStack implements RestorableState {
+
+    public interface OnPageAdded{
+        void onPageAdded(final @NonNull PageStack stack, final @NonNull PageAbstract addedPage);
+    }
+
+    public interface OnPagePop{
+        void onPagePop(final @NonNull PageStack stack, final @NonNull PageAbstract removedPage);
+    }
+
+    public interface ForEachPage{
+        void call(final @NonNull PageAbstract page);
+    }
+
+    private final List<OnPageAdded> lOnPageAdded = new ArrayList<>();
+    private final List<OnPagePop> lOnPagePop = new ArrayList<>();
+    private final Stack<PageAbstract> stack = new Stack<>();
+
+    /**
+     * Adds a new page into the stack.
+     * @param newPage The new page to add on top of the stack.
+     */
+    public void add(@NonNull PageAbstract newPage){
+        // Add the page
+        stack.add(newPage);
+
+        // Notify
+        forEachOnPageAdded((OnPageAdded l) -> l.onPageAdded(this, newPage));
+    }
+
+    /**
+     * Removes the last page added into the stack, if any, and returns it.
+     * @return The page that was removed from the stack, or null if the stack was empty.
+     */
+    public @Nullable PageAbstract pop(){
+        // Remove
+        final PageAbstract removed_page = stack.pop();
+
+        // Notify if required
+        if(removed_page != null)
+            forEachOnPagePop((OnPagePop l) -> l.onPagePop(this, removed_page));
+
+        // Done
+        return removed_page;
+    }
+
+    /**
+     * Returns the last page added to the stack without actually removing it.
+     * @return The last page onto the stack, or null if the stack is empty.
+     */
+    public @Nullable PageAbstract peek(){
+        return stack.peek();
+    }
+
+    /**
+     * Executes the given callback for each page into the stack.
+     * @param callback The callback that will be invoked for each page into the stack.
+     */
+    public void forEachPage(ForEachPage callback){
+        for(PageAbstract p : stack) callback.call(p);
+    }
+
+    /**
+     * Clears the stack.
+     */
+    public void clear(){
+        stack.clear();
+    }
+
+    /**
+     * Saves the state of this PageStack. This will also save the state of each page currently into
+     * the stack.
+     */
+    @Override
+    public @NonNull Bundle saveState(){
+        final Bundle state = new Bundle();
+        for(PageAbstract page : stack){
+            // TODO: 2018-08-17 finish this
+        }
+
+        return state;
+    }
+
+    /**
+     * Restores the state of this PageStack, as well as the state of each page that was originally
+     * contained into this stack.
+     * @param savedState
+     */
+    @Override
+    public void restoreState(final @NonNull Bundle savedState){
+        // TODO: 2018-08-17 finish this
+    }
+
+    public void addOnPageAdded(OnPageAdded l){ lOnPageAdded.add(l); }
+    public void removeOnPageAdded(OnPageAdded l){ lOnPageAdded.remove(l); }
+    public void addOnPagePop(OnPagePop l){ lOnPagePop.add(l); }
+    public void removeOnPagePop(OnPagePop l){ lOnPagePop.remove(l); }
+
+    private void forEachOnPagePop(ForEachOnPagePop cb){ for(OnPagePop l : lOnPagePop){ cb.call(l); } }
+    private void forEachOnPageAdded(ForEachOnPageAdded cb){ for(OnPageAdded l : lOnPageAdded){ cb.call(l); } }
+
+    private interface ForEachOnPageAdded{ void call(OnPageAdded l); }
+    private interface ForEachOnPagePop{ void call(OnPagePop l); }
+
+}

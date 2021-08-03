@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Spear for Twitter</string>
+    <string name="login_description">In order to user Spear for Twitter, you need to login with your Twitter account.</string>
+    <string name="login_to_twitter">Login to Twitter</string>
+    <string name="location_unknown">Location unknown</string>
+    <string name="user_tweet_count">%1$s tweets</string>
+    <string name="user_like_count">%1$s likes</string>
+    <string name="follow">Follow</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="follows_you">· follows you</string>
+    <string name="following_username">Following %1$s</string>
+    <string name="unfollowed_username">Unfollowed @%1$s</string>
+</resources>

@@ -1,0 +1,39 @@
+<merge tools:parentTag="androidx.coordinatorlayout.widget.CoordinatorLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- MaterialBanner to display errors -->
+    <com.ilareguy.spear.view.MaterialBanner
+        android:id="@+id/banner"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:elevation="4dp"
+        android:visibility="gone"/>
+
+    <!-- The sub header/subtitle -->
+    <com.ilareguy.spear.view.MaterialHeader
+        android:id="@+id/subtitle_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        custom:textColor="@color/textColorPrimary"
+        custom:highlightColor="@color/colorAccent"
+        android:background="@color/backgroundColorPrimary"/>
+
+    <!-- The actual contents -->
+    <view
+        class="com.ilareguy.spear.twitter.view.GenericStreamRecyclerViewAbstract$CustomSwipeRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/backgroundColorPrimary">
+
+        <ViewStub
+            android:id="@+id/timeline_recycler_view_stub"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </view>
+
+</merge>

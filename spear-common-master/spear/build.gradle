@@ -1,0 +1,48 @@
+apply plugin: 'com.android.library'
+
+android {
+	buildToolsVersion "28.0.2"
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    /*
+     * https://stackoverflow.com/questions/44413952/gradle-implementation-vs-api-configuration
+     *
+     * "If you are a library maintainer you should use api for every dependency which is needed
+     * for the public API of your library, while use implementation for test dependencies or
+     * dependencies which must not be used by the final users."
+     */
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha4'
+    // Android libraries
+    api 'androidx.annotation:annotation:1.0.0-rc01'
+    api 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
+    // Facebook's Fresco: http://frescolib.org/
+    api 'com.facebook.fresco:fresco:1.9.0'
+    api 'com.facebook.fresco:imagepipeline-okhttp3:1.9.0'
+    // Google's Material Components: https://github.com/material-components/material-components-android
+    api 'com.google.android.material:material:1.0.0-rc01'
+    // OkHttp
+    api 'com.squareup.okhttp3:okhttp:3.11.0'
+}

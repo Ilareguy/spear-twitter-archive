@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="twitterBlue">#1da1f2</color>
+    <color name="textColorPrimary">#000000</color>
+    <color name="textColorSecondary">#aaaaaa</color>
+    <color name="textColorPrimaryInverse">#ffffff</color>
+    <color name="textColorSecondaryInverse">#cececece</color>
+    <color name="backgroundColorPrimary">#ffffff</color>
+    <color name="backgroundColorSecondary">#ccc3c8c8</color>
+    <color name="rippleColorPrimary">#e5e5e5</color>
+</resources>

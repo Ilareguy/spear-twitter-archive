@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/author_thumbnail"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:roundAsCircle="true"
+        app:placeholderImage="@drawable/ic_default_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp"/>
+
+    <ImageView
+        android:id="@+id/badge_verified"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:tint="@color/twitterBlue"
+        android:src="@drawable/ic_badge_check"
+        app:srcCompat="@drawable/ic_badge_check"
+        app:layout_constraintEnd_toEndOf="@+id/author_thumbnail"
+        app:layout_constraintBottom_toBottomOf="@id/author_thumbnail"
+        android:translationX="8dp"/>
+
+    <ImageView
+        android:id="@+id/badge_translator"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:tint="@color/twitterBlue"
+        android:src="@drawable/ic_badge_translator"
+        app:srcCompat="@drawable/ic_badge_translator"
+        app:layout_constraintStart_toStartOf="@+id/author_thumbnail"
+        app:layout_constraintBottom_toBottomOf="@id/author_thumbnail"
+        android:translationX="-8dp"/>
+
+    <TextView
+        android:id="@+id/author_display_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        style="@style/H3"
+        android:textColor="@color/textColorPrimary"
+        app:layout_constraintStart_toEndOf="@+id/author_thumbnail"
+        app:layout_constraintTop_toTopOf="@+id/author_thumbnail"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/author_username"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorSecondary"
+        style="@style/Subtitle"
+        app:layout_constraintStart_toStartOf="@+id/author_display_name"
+        app:layout_constraintTop_toBottomOf="@+id/author_display_name"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</merge>

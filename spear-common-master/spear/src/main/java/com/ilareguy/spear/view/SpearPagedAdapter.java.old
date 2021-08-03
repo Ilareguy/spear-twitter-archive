@@ -1,0 +1,226 @@
+package com.ilareguy.spear.view;
+
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.ilareguy.spear.App;
+import com.ilareguy.spear.stream.StreamAbstract;
+import com.ilareguy.spear.util.DiffCallback;
+import com.ilareguy.spear.util.LoadingListener;
+
+import java.util.LinkedList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
+
+/**
+ * Adapter for a RecyclerViewAbstract that keeps only a limited amount of items of type DataType in
+ * memory, regardless of the total amount of items in the dataset. The adapter will automagically
+ * detect when new data needs to be loaded and do so in a background task.
+ *
+ * The actual data held in memory is only a portion of the total dataset, and data is loaded in the
+ * background as required when the user scrolls through the RecyclerViewAbstract.
+ *
+ * In order for a PagedAdapterAbstract to work properly, there are two main requirements:
+ *
+ * 1.   data retrieved from the stream must be identical every time it is accessed. This means
+ *      that if the stream is of type CacheOAuthStreamAbstract, the data returned from the cache
+ *      must be identical to that previously accessed remotely, and be returned in the same order; and
+ *
+ * 2.   The RecyclerViewAbstract must request data in a sequential order, meaning that it can't
+ *      request the object of type DataType at index 10, then suddenly at index 53, and back to 24.
+ *
+ * @param <ViewType> The type of view contained in the owning RecyclerViewAbstract.
+ * @param <DataType> The type of data contained in the dataset.
+ */
+public class SpearPagedAdapter<
+        ViewType extends View,
+        DataType extends DiffCallback<DataType>
+        > extends RecyclerView.Adapter<SpearPagedAdapter.SpearViewHolder<ViewType>>
+        implements StreamAbstract.OnReadComplete<DataType, StreamAbstract.ReadResult<DataType>>,
+        LoadingListener.OnLoadingStateListener{
+
+    private final @NonNull RecyclerViewAbstract<ViewType, DataType> recyclerView;
+    private StreamAbstract<DataType, StreamAbstract.ReadResult<DataType>> stream = null;
+    private LinkedList<DataType> loadedItems = new LinkedList<>();
+    private int totalItemCount = 0, firstLoadedItemIndex = 0, lastLoadedItemIndex = 0;
+    private boolean initialLoading;
+    private ReadDirection currentReadDirection = ReadDirection.FORWARD;
+    private int absoluteLastItemIndex = -1; // When we've reached the end of the stream, this will contain the absolute index
+                                            // of the last item in the stream, whether or not it is in memory.
+
+    public SpearPagedAdapter(final @NonNull RecyclerViewAbstract<ViewType, DataType> recyclerView){
+        super();
+        this.recyclerView = recyclerView;
+
+        recyclerView.addOnScrollListener(onScrollListener);
+    }
+
+    public final void setStream(final @NonNull StreamAbstract<DataType, StreamAbstract.ReadResult<DataType>> stream){
+        if(this.stream != null){
+            this.stream.setReadCompleteListener(null);
+        }
+
+        this.stream = stream;
+
+        // Reset and start the initial loading process
+        this.totalItemCount = 0;
+        initialLoading = true;
+        stream.setReadCompleteListener(this);
+        stream.setOnLoadingStateListener(this);
+        stream.readForward(LOADED_ITEMS_COUNT, null);
+    }
+
+    /**
+     * Returns the loaded object of type DataType at the given absolute index, or null if the
+     * data was not loaded.
+     *
+     * Calling this method may trigger a background loading task.
+     */
+    private @Nullable DataType getDataAtIndex(int absolute_index){
+        final int relative_index = getRelativeIndex(absolute_index);
+        App._d("abs:" + absolute_index + " rel:" + relative_index + " start:" + firstLoadedItemIndex + " end:" + lastLoadedItemIndex + " total:" + totalItemCount);
+        if(relative_index >= 0 && relative_index <= loadedItems.size()){
+            loadMoreMaybe(absolute_index);
+            return loadedItems.get(relative_index);
+        }return null;
+    }
+
+    private void loadMoreMaybe(final int absolute_index){
+        if(stream.isLoading()) return;
+        final int relative_index = getRelativeIndex(absolute_index);
+
+        if(currentReadDirection == ReadDirection.FORWARD
+                && lastLoadedItemIndex != absoluteLastItemIndex
+                && relative_index >= (loadedItems.size() - REMAINING_ITEMS_TRIGGER)){
+            stream.readForward(ITEMS_TO_LOAD, loadedItems.getLast());
+        }else if(relative_index != absolute_index
+                && currentReadDirection == ReadDirection.BACKWARD
+                && relative_index <= REMAINING_ITEMS_TRIGGER){
+            stream.readBackward(ITEMS_TO_LOAD, loadedItems.getFirst());
+        }
+    }
+
+    private int getRelativeIndex(final int absolute_index){
+        return (absolute_index - firstLoadedItemIndex);
+    }
+
+    @Override
+    public @NonNull SpearViewHolder<ViewType> onCreateViewHolder(@NonNull ViewGroup parent, int viewType){
+        return new SpearViewHolder<>(recyclerView.buildView(parent.getContext()));
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull SpearViewHolder<ViewType> holder, int absolute_position){
+        recyclerView.onBindViewHolder(holder.getView(), getDataAtIndex(absolute_position));
+    }
+
+    @Override
+    public int getItemCount(){ return totalItemCount; }
+
+    @Override
+    public void onReadForwardComplete(final StreamAbstract.ReadResult<DataType> result){
+        final LinkedList<DataType> loaded_items = result.getObject();
+        final int loaded_items_count = loaded_items.size();
+
+        if(initialLoading){
+            // This was the initial load
+            totalItemCount = loaded_items_count;
+            firstLoadedItemIndex = 0;
+            lastLoadedItemIndex = totalItemCount - 1;
+            loadedItems = loaded_items;
+            notifyDataSetChanged();
+            initialLoading = false;
+
+            return;
+        }
+
+        if(loaded_items_count == 0){
+            // Couldn't load anything. Consider this the end of the stream
+            absoluteLastItemIndex = lastLoadedItemIndex;
+            return;
+        }
+
+        // Remove the previous items that are now unneeded
+        final int items_to_remove = (loadedItems.size() + loaded_items_count) - LOADED_ITEMS_COUNT;
+        for(int i = 0; i < items_to_remove; i++)
+            loadedItems.removeFirst();
+
+        // Add the newly loaded items at the end of the container
+        for(DataType d : loaded_items)
+            loadedItems.addLast(d);
+
+        // Find the new indices
+        firstLoadedItemIndex += loaded_items_count;
+        lastLoadedItemIndex += loaded_items_count;
+
+        if(lastLoadedItemIndex > (totalItemCount - 1)){
+            // We have loaded items that were not previously accounted for
+            totalItemCount = (lastLoadedItemIndex + 1);
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onReadBackwardComplete(final StreamAbstract.ReadResult<DataType> result){
+        final LinkedList<DataType> loaded_items = result.getObject();
+        final int loaded_items_count = loaded_items.size();
+
+        // Remove items at the end of the container that are now unneeded
+        final int items_to_remove = (loadedItems.size() + loaded_items_count) - LOADED_ITEMS_COUNT;
+        for(int i = 0; i < items_to_remove; i++)
+            loadedItems.removeLast();
+
+        // Add the newly loaded items at the beginning of the container
+        for(DataType d : loaded_items)
+            loadedItems.addFirst(d);
+
+        // Find the new indices
+        firstLoadedItemIndex -= loaded_items_count;
+        lastLoadedItemIndex -= loaded_items_count;
+    }
+
+    @Override
+    public void onLoadingStateChanged(boolean loading){
+        App._d(loading
+            ? "Stream loading started."
+            : "Stream loading ended.");
+    }
+
+    private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener(){
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy){
+            super.onScrolled(recyclerView, dx, dy);
+            currentReadDirection = (dy > 0) ? ReadDirection.FORWARD : ReadDirection.BACKWARD;
+        }
+    };
+
+    /**
+     * The maximum amount of items in memory at one time.
+     */
+    private static final int LOADED_ITEMS_COUNT = 80;
+
+    /**
+     * The amount of items remaining in the loaded items array that will trigger a background
+     * loading task.
+     */
+    private static final int REMAINING_ITEMS_TRIGGER = 18;
+
+    private static final int ITEMS_TO_LOAD = 40;
+
+    public static final class SpearViewHolder<ViewType extends View>
+            extends RecyclerView.ViewHolder{
+
+        SpearViewHolder(ViewType v){
+            super(v);
+        }
+
+        public final ViewType getView(){ return (ViewType) itemView; }
+    }
+
+    private enum ReadDirection{
+        FORWARD,
+        BACKWARD
+    }
+}
